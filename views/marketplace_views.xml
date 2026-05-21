@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Vista del formulario (Form View) -->
+    <record id="view_marketplace_marketplace_form" model="ir.ui.view">
+        <field name="name">marketplace.marketplace.form</field>
+        <field name="model">marketplace.marketplace</field>
+        <field name="arch" type="xml">
+            <form string="Marketplace">
+                <sheet>
+                    <div class="oe_button_box" name="button_box"/>
+                    <field name="logo" widget="image" class="oe_avatar" style="float: right; margin-left: 10px;"/>
+                    <div class="oe_title">
+                        <label for="name" string="Nombre del Marketplace"/>
+                        <h1>
+                            <field name="name" placeholder="Ej. MercadoLibre, Amazon..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Vista de lista (Tree/List View) -->
+    <record id="view_marketplace_marketplace_tree" model="ir.ui.view">
+        <field name="name">marketplace.marketplace.tree</field>
+        <field name="model">marketplace.marketplace</field>
+        <field name="arch" type="xml">
+            <tree string="Marketplaces" multi_edit="1">
+                <field name="sequence" widget="handle"/>
+                <field name="logo" widget="image" options="{'size': [32, 32]}" string="Logo"/>
+                <field name="name"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- Vista de búsqueda (Search View) -->
+    <record id="view_marketplace_marketplace_search" model="ir.ui.view">
+        <field name="name">marketplace.marketplace.search</field>
+        <field name="model">marketplace.marketplace</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Marketplace">
+                <field name="name"/>
+                <filter string="Archivados" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana (Window Action) -->
+    <record id="action_marketplace_marketplace" model="ir.actions.act_window">
+        <field name="name">Marketplaces</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">marketplace.marketplace</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_marketplace_marketplace_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Crea tu primer Marketplace
+            </p>
+            <p>
+                Define los canales de venta externos (ej. Amazon, MercadoLibre) para vincular los enlaces en tus variantes de producto.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menús en Ventas e Inventario -->
+    <menuitem id="menu_marketplace_marketplace_sale"
+              name="Marketplaces"
+              action="action_marketplace_marketplace"
+              parent="sale.menu_sale_config"
+              sequence="50"/>
+
+    <menuitem id="menu_marketplace_marketplace_stock"
+              name="Marketplaces"
+              action="action_marketplace_marketplace"
+              parent="stock.menu_stock_config_settings"
+              sequence="50"/>
+</odoo>

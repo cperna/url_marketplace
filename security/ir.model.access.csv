@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_marketplace_marketplace,marketplace.marketplace,model_marketplace_marketplace,base.group_user,1,1,1,1
+access_product_variant_marketplace,product.variant.marketplace,model_product_variant_marketplace,base.group_user,1,1,1,1

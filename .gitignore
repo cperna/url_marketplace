@@ -1,0 +1,70 @@
+# ============================================================
+# .gitignore para proyectos Odoo
+# ============================================================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyo
+.Python
+
+# --- Entornos virtuales ---
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# --- Odoo específico ---
+filestore/
+sessions/
+*.log
+logs/
+.odoo_*.pid
+
+# --- Configuración sensible ---
+.env
+*.conf
+!*.conf.example
+odoo.conf
+odoo-server.conf
+
+# --- Backups y dumps de base de datos ---
+backups/
+*.dump
+*.sql
+*.zip
+*.gz
+*.tar
+*.tar.gz
+
+# --- macOS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- Node.js (si usas assets frontend) ---
+node_modules/
+npm-debug.log*
+
+# --- Archivos temporales ---
+*.tmp
+*.bak
+*.orig
+*.rej
