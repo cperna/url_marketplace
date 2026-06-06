@@ -29,6 +29,35 @@ class MarketplaceMarketplace(models.Model):
         help='Permite archivar/desactivar un marketplace sin borrar sus registros históricos'
     )
 
+    @api.constrains('name')
+    def _check_unique_name(self):
+        for record in self:
+            if self.search_count([('name', '=ilike', record.name), ('id', '!=', record.id)]) > 0:
+                raise models.ValidationError(f"El marketplace '{record.name}' ya existe. No se permiten nombres duplicados.")
+
+    @api.model
+    def _clean_duplicate_marketplaces(self):
+        """Fusiona los marketplaces duplicados conservando el primero y eliminando el resto,
+        reasignando los enlaces de productos al marketplace principal."""
+        self.env.cr.execute("SELECT name FROM marketplace_marketplace GROUP BY name HAVING count(*) > 1")
+        duplicates = self.env.cr.fetchall()
+        for dup in duplicates:
+            name = dup[0]
+            records = self.search([('name', '=', name)], order='id asc')
+            keep = records[0]
+            for remove in records[1:]:
+                links = self.env['product.variant.marketplace'].search([('marketplace_id', '=', remove.id)])
+                for link in links:
+                    existing = self.env['product.variant.marketplace'].search([
+                        ('marketplace_id', '=', keep.id), 
+                        ('product_tmpl_id', '=', link.product_tmpl_id.id)
+                    ])
+                    if existing:
+                        link.unlink()
+                    else:
+                        link.marketplace_id = keep.id
+                remove.unlink()
+
 
 class ProductVariantMarketplace(models.Model):
     _name = 'product.variant.marketplace'
@@ -105,18 +134,61 @@ class ProductTemplate(models.Model):
         marketplaces = self.env['marketplace.marketplace'].search([], order='sequence, id')
         if len(marketplaces) < index:
             return
-        mp = marketplaces[index-1]
+            
+        # Pre-ordenar marketplaces por longitud de nombre para buscar coincidencias largas primero
+        sorted_mps = sorted(marketplaces, key=lambda m: len(m.name), reverse=True)
+        original_mp = marketplaces[index-1]
+        
         for record in self:
             val = getattr(record, f'x_url_m{index}')
-            link = record.x_marketplace_ids.filtered(lambda l: l.marketplace_id.id == mp.id)
+            target_mp = original_mp
+            
+            if val:
+                val_lower = val.lower()
+                for mp in sorted_mps:
+                    keyword = mp.name.lower().replace(' ', '')
+                    if keyword in val_lower:
+                        target_mp = mp
+                        break
+            
+            # Si el enlace pertenece a un marketplace distinto al de la columna original
+            if target_mp != original_mp:
+                original_link = record.x_marketplace_ids.filtered(lambda l: l.marketplace_id.id == original_mp.id)
+                if original_link:
+                    original_link.unlink()  # Limpiar la columna original porque el enlace se va a reasignar
+            
+            # Crear o actualizar en el marketplace destino
+            link = record.x_marketplace_ids.filtered(lambda l: l.marketplace_id.id == target_mp.id)
             if link:
-                link[0].url = val
+                if val:
+                    link[0].url = val
+                else:
+                    link[0].unlink()
             elif val:
                 self.env['product.variant.marketplace'].create({
                     'product_tmpl_id': record.id,
-                    'marketplace_id': mp.id,
+                    'marketplace_id': target_mp.id,
                     'url': val
                 })
+
+    def action_auto_correct_marketplaces(self):
+        """Acción de servidor para reasignar automáticamente los enlaces a sus marketplaces correctos."""
+        marketplaces = self.env['marketplace.marketplace'].search([], order='sequence, id')
+        sorted_mps = sorted(marketplaces, key=lambda m: len(m.name), reverse=True)
+        
+        for record in self:
+            for link in record.x_marketplace_ids:
+                if not link.url:
+                    continue
+                    
+                url_lower = link.url.lower()
+                for mp in sorted_mps:
+                    keyword = mp.name.lower().replace(' ', '')
+                    if keyword in url_lower and link.marketplace_id.id != mp.id:
+                        existing = record.x_marketplace_ids.filtered(lambda l: l.marketplace_id.id == mp.id)
+                        if not existing:
+                            link.marketplace_id = mp.id
+                        break
 
     def _inverse_marketplace_url_1(self): self._inverse_marketplace_url(1)
     def _inverse_marketplace_url_2(self): self._inverse_marketplace_url(2)
