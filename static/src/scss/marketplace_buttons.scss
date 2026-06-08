@@ -25,7 +25,4 @@
     }
 }
 
-/* Ocultar el texto de Marca agregado por Odoo Studio para dejar solo el logo */
-div:has(> span[data-oe-expression="product.x_studio_marca"]) {
-    display: none !important;
-}
+
