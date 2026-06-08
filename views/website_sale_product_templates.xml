@@ -18,15 +18,14 @@
                                     <t t-if="mp_link.url">
                                         <a t-att-href="mp_link.url" 
                                            target="_blank" 
-                                           class="btn btn-outline-secondary d-flex align-items-center gap-2 marketplace-btn"
+                                           class="marketplace-btn-square"
                                            t-att-title="'Comprar en ' + mp_link.marketplace_id.name">
                                             
                                             <t t-if="mp_link.marketplace_id.logo">
                                                 <img t-attf-src="/web/image/marketplace.marketplace/{{ mp_link.marketplace_id.id }}/logo" 
-                                                     class="marketplace-logo" 
+                                                     class="marketplace-logo-square" 
                                                      t-att-alt="mp_link.marketplace_id.name"/>
                                             </t>
-                                            <span t-esc="mp_link.marketplace_id.name"/>
                                         </a>
                                     </t>
                                 </t>
