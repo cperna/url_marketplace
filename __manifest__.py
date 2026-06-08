@@ -12,6 +12,7 @@ Módulo avanzado que permite definir dinámicamente un catálogo de marketplaces
     'data': [
         'security/ir.model.access.csv',
         'data/marketplace_data.xml',
+        'data/ir_cron_data.xml',
         'views/marketplace_views.xml',
         'views/product_variant_marketplace_views.xml',
         'views/website_sale_product_templates.xml',

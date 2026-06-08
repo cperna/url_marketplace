@@ -93,10 +93,79 @@ class ProductVariantMarketplace(models.Model):
         required=False,
         help='Enlace directo a la variante publicada en este marketplace'
     )
+    marketplace_price = fields.Float(
+        string='Precio en Marketplace',
+        help='Último precio obtenido desde la plataforma del marketplace',
+        readonly=True
+    )
+    marketplace_currency_id = fields.Many2one(
+        'res.currency',
+        string='Moneda del Marketplace',
+        readonly=True
+    )
+    last_price_sync = fields.Datetime(
+        string='Última Sincronización',
+        readonly=True
+    )
 
     _sql_constraints = [
         ('uniq_product_marketplace', 'unique(product_id, marketplace_id)', '¡Ya existe un enlace para este marketplace en esta variante!')
     ]
+
+    @api.model
+    def action_sync_marketplace_prices(self):
+        """Tarea programada para sincronizar los precios de los marketplaces soportados."""
+        import requests
+        import re
+        from datetime import datetime
+
+        # Actualmente soportamos Mercado Libre
+        ml_records = self.search([('url', '!=', False)])
+        
+        # Diccionario para mapear códigos de moneda de ML a Odoo
+        currency_map = {
+            'PEN': 'PEN',
+            'USD': 'USD',
+            'ARS': 'ARS',
+            'CLP': 'CLP',
+            'COP': 'COP',
+            'MXN': 'MXN'
+        }
+
+        for record in ml_records:
+            if not record.url:
+                continue
+                
+            # Validar si es MercadoLibre
+            if 'mercadolibre.com' in record.url.lower():
+                # Extraer el ID. Formatos comunes: /MPE-1042551190- o /MPE1042551190
+                match = re.search(r'/(M[A-Z]{2})-?(\d+)', record.url)
+                if match:
+                    site_id = match.group(1)
+                    item_number = match.group(2)
+                    item_id = f"{site_id}{item_number}"
+                    
+                    try:
+                        api_url = f"https://api.mercadolibre.com/items/{item_id}"
+                        response = requests.get(api_url, timeout=10)
+                        if response.status_code == 200:
+                            data = response.json()
+                            price = data.get('price')
+                            ml_currency = data.get('currency_id')
+                            
+                            if price is not None:
+                                record.marketplace_price = float(price)
+                                record.last_price_sync = datetime.now()
+                                
+                                # Buscar moneda
+                                odoo_currency_code = currency_map.get(ml_currency, ml_currency)
+                                currency = self.env['res.currency'].search([('name', '=', odoo_currency_code)], limit=1)
+                                if currency:
+                                    record.marketplace_currency_id = currency.id
+                    except Exception as e:
+                        import logging
+                        _logger = logging.getLogger(__name__)
+                        _logger.error("Error sincronizando precio para %s: %s", item_id, str(e))
 
 
 class ProductTemplate(models.Model):
