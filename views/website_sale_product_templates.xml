@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="product_marketplace_buttons" inherit_id="website_sale.product" name="Marketplace Buttons">
-        <xpath expr="//div[@id='product_details']" position="inside">
-            <div class="mt-4 mb-4" id="marketplace_buttons_container">
+        <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="after">
+            <div class="mt-4 mb-4 w-100" id="marketplace_buttons_container">
                 <t t-foreach="product.product_variant_ids" t-as="variant">
                     <div t-attf-class="js_marketplace_container {{ 'd-none' if variant.id != product._get_first_possible_variant_id() else '' }}" 
                          t-att-data-variant-id="variant.id">
