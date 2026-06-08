@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="product_marketplace_buttons" inherit_id="website_sale.product" name="Marketplace Buttons">
+        <xpath expr="//div[@id='product_details']" position="inside">
+            <div class="mt-4 mb-4" id="marketplace_buttons_container">
+                <t t-foreach="product.product_variant_ids" t-as="variant">
+                    <div t-attf-class="js_marketplace_container {{ 'd-none' if variant.id != product._get_first_possible_variant_id() else '' }}" 
+                         t-att-data-variant-id="variant.id">
+                        
+                        <!-- Check if variant has any valid URLs -->
+                        <t t-set="has_urls" t-value="len([l for l in variant.x_marketplace_ids if l.url]) &gt; 0"/>
+                        
+                        <t t-if="has_urls">
+                            <hr class="mt-4 mb-3 opacity-50"/>
+                            <h6 class="text-muted mb-3" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">También disponible en:</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                <t t-foreach="variant.x_marketplace_ids" t-as="mp_link">
+                                    <t t-if="mp_link.url">
+                                        <a t-att-href="mp_link.url" 
+                                           target="_blank" 
+                                           class="btn btn-outline-secondary d-flex align-items-center gap-2 marketplace-btn"
+                                           t-att-title="'Comprar en ' + mp_link.marketplace_id.name">
+                                            
+                                            <t t-if="mp_link.marketplace_id.logo">
+                                                <img t-attf-src="/web/image/marketplace.marketplace/{{ mp_link.marketplace_id.id }}/logo" 
+                                                     class="marketplace-logo" 
+                                                     t-att-alt="mp_link.marketplace_id.name"/>
+                                            </t>
+                                            <span t-esc="mp_link.marketplace_id.name"/>
+                                        </a>
+                                    </t>
+                                </t>
+                            </div>
+                        </t>
+
+                    </div>
+                </t>
+            </div>
+        </xpath>
+    </template>
+</odoo>

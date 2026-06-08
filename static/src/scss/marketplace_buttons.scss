@@ -1,0 +1,26 @@
+.marketplace-btn {
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
+
+    &:hover {
+        background-color: #e9ecef;
+        border-color: #dae0e5;
+        color: #212529;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        text-decoration: none;
+    }
+
+    .marketplace-logo {
+        height: 20px;
+        width: 20px;
+        object-fit: contain;
+        border-radius: 50%;
+        background-color: white;
+    }
+}
