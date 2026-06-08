@@ -69,16 +69,10 @@
         </field>
     </record>
 
-    <!-- Menús en Ventas e Inventario -->
-    <menuitem id="menu_marketplace_marketplace_sale"
+    <!-- Menú en Configuración de Sitio Web -->
+    <menuitem id="menu_marketplace_marketplace_website"
               name="Marketplaces"
               action="action_marketplace_marketplace"
-              parent="sale.menu_sale_config"
-              sequence="50"/>
-
-    <menuitem id="menu_marketplace_marketplace_stock"
-              name="Marketplaces"
-              action="action_marketplace_marketplace"
-              parent="stock.menu_stock_config_settings"
+              parent="website.menu_website_global_configuration"
               sequence="50"/>
 </odoo>

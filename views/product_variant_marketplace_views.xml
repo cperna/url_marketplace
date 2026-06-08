@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Vista del formulario detallado de Producto (product.template) -->
-    <record id="product_template_form_view_inherit_marketplace" model="ir.ui.view">
-        <field name="name">product.template.form.inherit.marketplace</field>
-        <field name="model">product.template</field>
-        <field name="inherit_id" ref="product.product_template_form_view"/>
+    <!-- Vista del formulario detallado de Variante de Producto (product.product) -->
+    <record id="product_product_form_view_inherit_marketplace" model="ir.ui.view">
+        <field name="name">product.product.form.inherit.marketplace</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="Marketplaces" name="marketplaces_tab">
@@ -27,16 +27,16 @@
         <field name="inherit_id" ref="product.product_template_tree_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='list_price']" position="after">
-                <field name="x_url_m1" widget="url" optional="show" string="Marketplace 1"/>
-                <field name="x_url_m2" widget="url" optional="show" string="Marketplace 2"/>
-                <field name="x_url_m3" widget="url" optional="show" string="Marketplace 3"/>
-                <field name="x_url_m4" widget="url" optional="show" string="Marketplace 4"/>
-                <field name="x_url_m5" widget="url" optional="show" string="Marketplace 5"/>
-                <field name="x_url_m6" widget="url" optional="show" string="Marketplace 6"/>
-                <field name="x_url_m7" widget="url" optional="show" string="Marketplace 7"/>
-                <field name="x_url_m8" widget="url" optional="show" string="Marketplace 8"/>
-                <field name="x_url_m9" widget="url" optional="show" string="Marketplace 9"/>
-                <field name="x_url_m10" widget="url" optional="show" string="Marketplace 10"/>
+                <field name="x_url_m1" widget="url" optional="hide" string="Marketplace 1"/>
+                <field name="x_url_m2" widget="url" optional="hide" string="Marketplace 2"/>
+                <field name="x_url_m3" widget="url" optional="hide" string="Marketplace 3"/>
+                <field name="x_url_m4" widget="url" optional="hide" string="Marketplace 4"/>
+                <field name="x_url_m5" widget="url" optional="hide" string="Marketplace 5"/>
+                <field name="x_url_m6" widget="url" optional="hide" string="Marketplace 6"/>
+                <field name="x_url_m7" widget="url" optional="hide" string="Marketplace 7"/>
+                <field name="x_url_m8" widget="url" optional="hide" string="Marketplace 8"/>
+                <field name="x_url_m9" widget="url" optional="hide" string="Marketplace 9"/>
+                <field name="x_url_m10" widget="url" optional="hide" string="Marketplace 10"/>
             </xpath>
         </field>
     </record>

@@ -8,9 +8,10 @@
 Módulo avanzado que permite definir dinámicamente un catálogo de marketplaces con logotipos, vinculándolos mediante tablas relacionales One2many en cada variante de producto.
     """,
     'author': 'Carlos Pernalete',
-    'depends': ['product', 'sale', 'stock'],
+    'depends': ['product', 'sale', 'stock', 'website'],
     'data': [
         'security/ir.model.access.csv',
+        'data/marketplace_data.xml',
         'views/marketplace_views.xml',
         'views/product_variant_marketplace_views.xml',
     ],
