@@ -16,6 +16,7 @@ Módulo avanzado que permite definir dinámicamente un catálogo de marketplaces
         'views/marketplace_views.xml',
         'views/product_variant_marketplace_views.xml',
         'views/website_sale_product_templates.xml',
+        'views/res_config_settings_views.xml',
     ],
     'assets': {
         'web.assets_frontend': [

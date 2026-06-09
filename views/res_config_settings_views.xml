@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_marketplace" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.marketplace</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Marketplaces" string="Marketplaces" name="url_marketplace" groups="base.group_system">
+                    <block title="Falabella Seller Center API" name="falabella_api_setting_container">
+                        <setting id="falabella_api_setting" string="Falabella API Credentials" help="Configura las credenciales para sincronizar precios automáticamente.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="falabella_api_user_id" class="col-lg-3 o_light_label"/>
+                                    <field name="falabella_api_user_id" class="oe_inline"/>
+                                </div>
+                                <div class="row">
+                                    <label for="falabella_api_key" class="col-lg-3 o_light_label"/>
+                                    <field name="falabella_api_key" class="oe_inline" password="True"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Acción para acceder directamente si lo deseas -->
+    <record id="action_marketplace_config_settings" model="ir.actions.act_window">
+        <field name="name">Ajustes de Marketplaces</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'url_marketplace', 'bin_size': False}</field>
+    </record>
+</odoo>

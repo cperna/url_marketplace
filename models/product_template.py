@@ -131,6 +131,39 @@ class ProductVariantMarketplace(models.Model):
             'COP': 'COP',
             'MXN': 'MXN'
         }
+        
+        # Configuración de Falabella API
+        falabella_user = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.falabella_api_user_id')
+        falabella_key = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.falabella_api_key')
+
+        import urllib.parse
+        import hmac
+        import hashlib
+        from datetime import timezone
+
+        def get_falabella_url(action, user_id, api_key, extra_params=None):
+            params = {
+                'Action': action,
+                'Format': 'JSON',
+                'Timestamp': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+                'UserID': user_id,
+                'Version': '1.0'
+            }
+            if extra_params:
+                params.update(extra_params)
+            
+            # Ordenar y codificar según RFC 3986
+            sorted_params = sorted(params.items())
+            encoded_params = urllib.parse.urlencode(sorted_params, quote_via=urllib.parse.quote)
+            
+            # Generar firma HMAC-SHA256
+            signature = hmac.new(
+                api_key.encode('utf-8'),
+                encoded_params.encode('utf-8'),
+                hashlib.sha256
+            ).hexdigest()
+            
+            return f"https://sellercenter-api.falabella.com/?{encoded_params}&Signature={signature}"
 
         for record in ml_records:
             if not record.url:
@@ -170,6 +203,62 @@ class ProductVariantMarketplace(models.Model):
                         import logging
                         _logger = logging.getLogger(__name__)
                         _logger.error("Error sincronizando precio para %s: %s", item_id, str(e))
+
+        # Sincronización de Falabella
+        if falabella_user and falabella_key:
+            falabella_records = self.search([('url', '!=', False)])
+            falabella_links = [r for r in falabella_records if 'falabella.com' in r.url.lower()]
+            
+            if falabella_links:
+                try:
+                    limit = 1000
+                    offset = 0
+                    all_products = []
+                    
+                    # Extraer todos los productos en páginas de 1000 (suficiente para la mayoría)
+                    url = get_falabella_url('GetProducts', falabella_user, falabella_key, {'Limit': str(limit), 'Offset': str(offset)})
+                    response = requests.get(url, timeout=30)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        body = data.get('SuccessResponse', {}).get('Body', {})
+                        products_data = body.get('Products', {}).get('Product', [])
+                        
+                        # Si es un solo producto, la API devuelve un diccionario en vez de una lista
+                        if isinstance(products_data, dict):
+                            products_data = [products_data]
+                            
+                        # Mapear precios
+                        price_map = {}
+                        for p in products_data:
+                            sku = str(p.get('SellerSku', '')).strip()
+                            sale_price = p.get('SalePrice')
+                            price = p.get('Price')
+                            
+                            # Usar SalePrice si existe y es > 0, sino usar Price normal
+                            try:
+                                final_price = float(sale_price) if sale_price and float(sale_price) > 0 else float(price or 0)
+                                if final_price > 0 and sku:
+                                    price_map[sku] = final_price
+                            except (ValueError, TypeError):
+                                pass
+                        
+                        # Moneda de Falabella Perú por defecto
+                        pen_currency = self.env['res.currency'].search([('name', '=', 'PEN')], limit=1)
+                        
+                        for record in falabella_links:
+                            # El SellerSku es la referencia interna de la variante
+                            variant_sku = record.product_id.default_code
+                            if variant_sku and variant_sku in price_map:
+                                record.marketplace_price = price_map[variant_sku]
+                                record.last_price_sync = datetime.now()
+                                if pen_currency:
+                                    record.marketplace_currency_id = pen_currency.id
+
+                except Exception as e:
+                    import logging
+                    _logger = logging.getLogger(__name__)
+                    _logger.error("Error conectando a API Falabella: %s", str(e))
 
 
 class ProductTemplate(models.Model):
