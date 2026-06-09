@@ -138,6 +138,65 @@ class ProductVariantMarketplace(models.Model):
             'MXN': 'MXN'
         }
         
+        import logging
+        _logger = logging.getLogger(__name__)
+
+        # Configuración de Mercado Libre API
+        ml_app_id = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ml_app_id')
+        ml_secret_key = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ml_secret_key')
+        ml_redirect_uri = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ml_redirect_uri')
+        ml_auth_code = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ml_auth_code')
+        ml_access_token = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ml_access_token')
+        ml_refresh_token = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ml_refresh_token')
+
+        def _get_ml_token(grant_type, code_or_refresh):
+            token_url = "https://api.mercadolibre.com/oauth/token"
+            headers = {
+                'accept': 'application/json',
+                'content-type': 'application/x-www-form-urlencoded'
+            }
+            data = {
+                'grant_type': grant_type,
+                'client_id': ml_app_id,
+                'client_secret': ml_secret_key
+            }
+            if grant_type == 'authorization_code':
+                data['code'] = code_or_refresh
+                data['redirect_uri'] = ml_redirect_uri
+            else:
+                data['refresh_token'] = code_or_refresh
+                
+            try:
+                response = requests.post(token_url, headers=headers, data=data, timeout=15)
+                if response.status_code == 200:
+                    resp_json = response.json()
+                    new_access = resp_json.get('access_token')
+                    new_refresh = resp_json.get('refresh_token')
+                    if new_access:
+                        self.env['ir.config_parameter'].sudo().set_param('url_marketplace.ml_access_token', new_access)
+                    if new_refresh:
+                        self.env['ir.config_parameter'].sudo().set_param('url_marketplace.ml_refresh_token', new_refresh)
+                    return new_access, new_refresh
+                else:
+                    _logger.error("Error obteniendo token ML: %s", response.text)
+                    return None, None
+            except Exception as e:
+                _logger.error("Excepcion al conectar con API ML para tokens: %s", str(e))
+                return None, None
+
+        # Intento inicial si hay auth_code y no token
+        if ml_app_id and ml_secret_key and ml_auth_code and not ml_access_token:
+            ml_access_token, ml_refresh_token = _get_ml_token('authorization_code', ml_auth_code)
+            # Limpiar auth code para evitar reusarlo ya que expirará
+            self.env['ir.config_parameter'].sudo().set_param('url_marketplace.ml_auth_code', '')
+            
+        ml_headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'application/json'
+        }
+        if ml_access_token:
+            ml_headers['Authorization'] = f'Bearer {ml_access_token}'
+
         # Configuración de Falabella API
         falabella_user = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.falabella_api_user_id')
         falabella_key = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.falabella_api_key')
@@ -186,11 +245,18 @@ class ProductVariantMarketplace(models.Model):
                     
                     try:
                         api_url = f"https://api.mercadolibre.com/items/{item_id}"
-                        headers = {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                            'Accept': 'application/json'
-                        }
-                        response = requests.get(api_url, headers=headers, timeout=10)
+                        response = requests.get(api_url, headers=ml_headers, timeout=10)
+                        
+                        # Manejo de expiración o error 401/403 con ML
+                        if response.status_code in [401, 403] and ml_refresh_token:
+                            _logger.info("Refrescando token de Mercado Libre...")
+                            new_access, new_refresh = _get_ml_token('refresh_token', ml_refresh_token)
+                            if new_access:
+                                ml_access_token = new_access
+                                ml_refresh_token = new_refresh
+                                ml_headers['Authorization'] = f'Bearer {ml_access_token}'
+                                response = requests.get(api_url, headers=ml_headers, timeout=10)
+                                
                         if response.status_code == 200:
                             data = response.json()
                             price = data.get('price')
@@ -206,9 +272,9 @@ class ProductVariantMarketplace(models.Model):
                                 currency = self.env['res.currency'].search([('name', '=', odoo_currency_code)], limit=1)
                                 if currency:
                                     record.marketplace_currency_id = currency.id
+                        else:
+                            _logger.warning("No se pudo sincronizar ML para %s. Estado: %s - Respuesta: %s", item_id, response.status_code, response.text)
                     except Exception as e:
-                        import logging
-                        _logger = logging.getLogger(__name__)
                         _logger.error("Error sincronizando precio para %s: %s", item_id, str(e))
 
         # Sincronización de Falabella

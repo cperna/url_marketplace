@@ -14,3 +14,27 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='url_marketplace.falabella_api_key',
         help="La clave API proporcionada por Falabella Seller Center"
     )
+
+    ml_app_id = fields.Char(
+        string='Mercado Libre App ID',
+        config_parameter='url_marketplace.ml_app_id',
+        help="El ID de la Aplicación de Mercado Libre"
+    )
+
+    ml_secret_key = fields.Char(
+        string='Mercado Libre Secret Key',
+        config_parameter='url_marketplace.ml_secret_key',
+        help="La Clave Secreta de la Aplicación"
+    )
+
+    ml_redirect_uri = fields.Char(
+        string='Mercado Libre Redirect URI',
+        config_parameter='url_marketplace.ml_redirect_uri',
+        help="URL de redirección configurada en la App (ej. https://techstop.com.pe)"
+    )
+
+    ml_auth_code = fields.Char(
+        string='Mercado Libre Auth Code (TG)',
+        config_parameter='url_marketplace.ml_auth_code',
+        help="Código de autorización manual (TG-...) generado tras dar permisos a la App."
+    )

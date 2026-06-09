@@ -22,6 +22,32 @@
                             </div>
                         </setting>
                     </block>
+                    
+                    <block title="Mercado Libre API" name="ml_api_setting_container">
+                        <setting id="ml_api_setting" string="Mercado Libre API Credentials" help="Credenciales OAuth 2.0 de la aplicación en developers.mercadolibre.com">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="ml_app_id" class="col-lg-3 o_light_label"/>
+                                    <field name="ml_app_id" class="oe_inline"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="ml_secret_key" class="col-lg-3 o_light_label"/>
+                                    <field name="ml_secret_key" class="oe_inline" password="True"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="ml_redirect_uri" class="col-lg-3 o_light_label"/>
+                                    <field name="ml_redirect_uri" class="oe_inline" placeholder="https://tusitio.com"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="ml_auth_code" class="col-lg-3 o_light_label" string="Código TG"/>
+                                    <field name="ml_auth_code" class="oe_inline" password="True" placeholder="TG-648b263..."/>
+                                </div>
+                                <div class="text-muted mt16">
+                                    <p>Guarde la configuración y la próxima vez que se ejecute la sincronización de precios Odoo convertirá el código TG en un Token de acceso permanente.</p>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>
