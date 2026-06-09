@@ -231,13 +231,27 @@ class ProductVariantMarketplace(models.Model):
                         # Mapear precios
                         price_map = {}
                         for p in products_data:
-                            sku = str(p.get('SellerSku', '')).strip()
-                            sale_price = p.get('SalePrice')
-                            price = p.get('Price')
+                            sku = p.get('SellerSku')
+                            # The price is usually in BusinessUnits.BusinessUnit
+                            business_units = p.get('BusinessUnits', {}).get('BusinessUnit', [])
+                            if isinstance(business_units, dict):
+                                business_units = [business_units]
                             
-                            # Usar SalePrice si existe y es > 0, sino usar Price normal
+                            price = 0.0
+                            sale_price = 0.0
+                            
+                            for bu in business_units:
+                                if bu.get('BusinessUnit') == 'Falabella':
+                                    price = float(bu.get('Price') or 0.0)
+                                    sale_price = float(bu.get('SpecialPrice') or 0.0)
+                                    break
+                            
+                            if not price and not sale_price:
+                                price = float(p.get('Price') or 0.0)
+                                sale_price = float(p.get('SalePrice') or 0.0)
+                                
                             try:
-                                final_price = float(sale_price) if sale_price and float(sale_price) > 0 else float(price or 0)
+                                final_price = sale_price if sale_price > 0 else price
                                 if final_price > 0 and sku:
                                     price_map[sku] = final_price
                             except (ValueError, TypeError):
