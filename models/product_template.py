@@ -147,7 +147,11 @@ class ProductVariantMarketplace(models.Model):
                     
                     try:
                         api_url = f"https://api.mercadolibre.com/items/{item_id}"
-                        response = requests.get(api_url, timeout=10)
+                        headers = {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                            'Accept': 'application/json'
+                        }
+                        response = requests.get(api_url, headers=headers, timeout=10)
                         if response.status_code == 200:
                             data = response.json()
                             price = data.get('price')
