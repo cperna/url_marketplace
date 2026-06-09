@@ -23,6 +23,21 @@
                         </setting>
                     </block>
                     
+                    <block title="Ripley Seller Center API (Mirakl)" name="ripley_api_setting_container">
+                        <setting id="ripley_api_setting" string="Ripley API Credentials" help="Configura la clave API de Mirakl para sincronizar stock y precios de Ripley.">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="ripley_api_key" class="col-lg-3 o_light_label"/>
+                                    <field name="ripley_api_key" class="oe_inline" password="True"/>
+                                </div>
+                                <div class="row">
+                                    <label for="ripley_shop_id" class="col-lg-3 o_light_label"/>
+                                    <field name="ripley_shop_id" class="oe_inline"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    
                     <block title="Mercado Libre API" name="ml_api_setting_container">
                         <setting id="ml_api_setting" string="Mercado Libre API Credentials" help="Credenciales OAuth 2.0 de la aplicación en developers.mercadolibre.com">
                             <div class="content-group">

@@ -15,6 +15,18 @@ class ResConfigSettings(models.TransientModel):
         help="La clave API proporcionada por Falabella Seller Center"
     )
 
+    ripley_api_key = fields.Char(
+        string='Ripley API Key (Mirakl)',
+        config_parameter='url_marketplace.ripley_api_key',
+        help="La Clave API generada desde el panel de Mirakl de Ripley Perú"
+    )
+    
+    ripley_shop_id = fields.Char(
+        string='Ripley Shop ID (Mirakl)',
+        config_parameter='url_marketplace.ripley_shop_id',
+        help="Tu ID de tienda en Ripley (Opcional pero recomendado)"
+    )
+
     ml_app_id = fields.Char(
         string='Mercado Libre App ID',
         config_parameter='url_marketplace.ml_app_id',

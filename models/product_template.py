@@ -354,6 +354,68 @@ class ProductVariantMarketplace(models.Model):
                     _logger = logging.getLogger(__name__)
                     _logger.error("Error conectando a API Falabella: %s", str(e))
 
+        # Sincronización de Ripley (Mirakl)
+        ripley_api_key = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ripley_api_key')
+        ripley_shop_id = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.ripley_shop_id')
+        
+        if ripley_api_key:
+            ripley_records = self.search([('url', '!=', False)])
+            ripley_links = [r for r in ripley_records if r.marketplace_id.name and 'ripley' in r.marketplace_id.name.lower()]
+            
+            if ripley_links:
+                try:
+                    headers = {
+                        'Authorization': ripley_api_key,
+                        'Accept': 'application/json'
+                    }
+                    if ripley_shop_id:
+                        headers['Shop-Id'] = ripley_shop_id
+                        
+                    price_map = {}
+                    offset = 0
+                    max_records = 100
+                    
+                    while True:
+                        url = f"https://ripley-prod.mirakl.net/api/offers?max={max_records}&offset={offset}"
+                        res = requests.get(url, headers=headers, timeout=20)
+                        if res.status_code == 200:
+                            data = res.json()
+                            offers = data.get('offers', [])
+                            if not offers:
+                                break
+                            
+                            for offer in offers:
+                                sku = offer.get('shop_sku')
+                                price = offer.get('price')
+                                qty = offer.get('quantity')
+                                
+                                if sku and price is not None:
+                                    price_map[sku] = {
+                                        'price': float(price),
+                                        'stock': int(qty) if qty is not None else 0
+                                    }
+                            
+                            if len(offers) < max_records:
+                                break
+                            offset += max_records
+                        else:
+                            _logger.error("Error API Ripley Mirakl: %s - %s", res.status_code, res.text)
+                            break
+                            
+                    pen_currency = self.env['res.currency'].search([('name', '=', 'PEN')], limit=1)
+                    for record in ripley_links:
+                        variant_sku = record.product_id.default_code
+                        if variant_sku and variant_sku in price_map:
+                            record.marketplace_price = price_map[variant_sku]['price']
+                            record.marketplace_stock = price_map[variant_sku]['stock']
+                            record.last_price_sync = datetime.now()
+                            if pen_currency:
+                                record.marketplace_currency_id = pen_currency.id
+                except Exception as e:
+                    import logging
+                    _logger = logging.getLogger(__name__)
+                    _logger.error("Error sincronizando Ripley: %s", str(e))
+
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
