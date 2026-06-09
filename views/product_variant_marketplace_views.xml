@@ -13,6 +13,9 @@
                             <field name="marketplace_logo" widget="image" options="{'size': [32, 32]}" string="Logo" readonly="1"/>
                             <field name="marketplace_id" options="{'no_open': False, 'no_create': False}"/>
                             <field name="url" widget="url" placeholder="https://articulo.mercadolibre..."/>
+                            <field name="marketplace_price" readonly="1" force_save="1"/>
+                            <field name="marketplace_stock" readonly="1" force_save="1"/>
+                            <field name="last_price_sync" readonly="1" optional="hide"/>
                         </tree>
                     </field>
                 </page>

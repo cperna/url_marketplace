@@ -98,6 +98,12 @@ class ProductVariantMarketplace(models.Model):
         help='Último precio obtenido desde la plataforma del marketplace',
         readonly=True
     )
+    marketplace_stock = fields.Integer(
+        string='Stock en Marketplace',
+        default=0,
+        help="Inventario extraído desde la plataforma (Mercado Libre, Falabella, etc.)",
+        readonly=True
+    )
     marketplace_currency_id = fields.Many2one(
         'res.currency',
         string='Moneda del Marketplace',
@@ -192,6 +198,7 @@ class ProductVariantMarketplace(models.Model):
                             
                             if price is not None:
                                 record.marketplace_price = float(price)
+                                record.marketplace_stock = int(data.get('available_quantity', 0))
                                 record.last_price_sync = datetime.now()
                                 
                                 # Buscar moneda
@@ -240,10 +247,13 @@ class ProductVariantMarketplace(models.Model):
                             price = 0.0
                             sale_price = 0.0
                             
+                            stock = 0
+                            
                             for bu in business_units:
                                 if bu.get('BusinessUnit') == 'Falabella':
                                     price = float(bu.get('Price') or 0.0)
                                     sale_price = float(bu.get('SpecialPrice') or 0.0)
+                                    stock = int(bu.get('Stock') or 0)
                                     break
                             
                             if not price and not sale_price:
@@ -253,7 +263,10 @@ class ProductVariantMarketplace(models.Model):
                             try:
                                 final_price = sale_price if sale_price > 0 else price
                                 if final_price > 0 and sku:
-                                    price_map[sku] = final_price
+                                    price_map[sku] = {
+                                        'price': final_price,
+                                        'stock': stock
+                                    }
                             except (ValueError, TypeError):
                                 pass
                         
@@ -264,7 +277,8 @@ class ProductVariantMarketplace(models.Model):
                             # El SellerSku es la referencia interna de la variante
                             variant_sku = record.product_id.default_code
                             if variant_sku and variant_sku in price_map:
-                                record.marketplace_price = price_map[variant_sku]
+                                record.marketplace_price = price_map[variant_sku]['price']
+                                record.marketplace_stock = price_map[variant_sku]['stock']
                                 record.last_price_sync = datetime.now()
                                 if pen_currency:
                                     record.marketplace_currency_id = pen_currency.id
