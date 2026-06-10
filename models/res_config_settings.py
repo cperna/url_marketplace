@@ -174,8 +174,7 @@ class ResConfigSettings(models.TransientModel):
                     # Update fields except product_id if it's already linked correctly
                     update_vals = {
                         'marketplace_product_name': name, 
-                        'marketplace_sku': ref_id or str(sku_id),
-                        'url': f"https://{domain}/p?skuId={sku_id}"
+                        'marketplace_sku': ref_id or str(sku_id)
                     }
                     if product and not existing.product_id:
                         update_vals['product_id'] = product.id
