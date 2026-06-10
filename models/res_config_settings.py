@@ -76,15 +76,24 @@ class ResConfigSettings(models.TransientModel):
         help="Elige el marketplace que representa a Claro para asignar los enlaces automáticamente"
     )
 
+    vtex_store_domain = fields.Char(
+        string='Dominio de la Tienda (Ej. www.tiendaclaro.pe)',
+        config_parameter='url_marketplace.vtex_store_domain',
+        help="Usado para construir la URL pública de los productos al importarlos"
+    )
+
     def action_import_vtex_catalog(self):
         """Tarea manual para importar el catálogo de VTEX a los enlaces de Odoo"""
         vtex_account_name = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_account_name')
         vtex_app_key = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_app_key')
         vtex_app_token = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_app_token')
         vtex_marketplace_id = int(self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_marketplace_id', 0))
+        vtex_store_domain = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_store_domain')
 
         if not vtex_account_name or not vtex_app_key or not vtex_app_token or not vtex_marketplace_id:
             raise models.ValidationError("Faltan configurar credenciales o el Marketplace destino para VTEX.")
+
+        domain = vtex_store_domain or f"{vtex_account_name}.myvtex.com"
 
         import requests
         headers = {
@@ -152,7 +161,7 @@ class ResConfigSettings(models.TransientModel):
                     'marketplace_id': vtex_marketplace_id,
                     'marketplace_sku': ref_id or str(sku_id),
                     'marketplace_product_name': name,
-                    'url': f"vtex://{sku_id}" # Placeholder url to identify it's from vtex
+                    'url': f"https://{domain}/p?skuId={sku_id}"
                 }
                 
                 if product:

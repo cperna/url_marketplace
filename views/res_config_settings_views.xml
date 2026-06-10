@@ -83,6 +83,10 @@
                                     <label for="vtex_marketplace_id" class="col-lg-3 o_light_label"/>
                                     <field name="vtex_marketplace_id" class="oe_inline"/>
                                 </div>
+                                <div class="row mt8">
+                                    <label for="vtex_store_domain" class="col-lg-3 o_light_label"/>
+                                    <field name="vtex_store_domain" class="oe_inline" placeholder="ej. tienda.claro.com.pe"/>
+                                </div>
                                 <div class="mt16">
                                     <button name="action_import_vtex_catalog" type="object" string="Importar Catálogo de VTEX" class="btn-primary" icon="fa-cloud-download"/>
                                 </div>
