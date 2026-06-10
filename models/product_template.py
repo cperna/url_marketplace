@@ -93,6 +93,10 @@ class ProductVariantMarketplace(models.Model):
         required=False,
         help='Enlace directo a la variante publicada en este marketplace'
     )
+    marketplace_sku = fields.Char(
+        string='SKU en Marketplace',
+        help='SKU usado en este marketplace si es distinto a la Referencia Interna de Odoo'
+    )
     marketplace_price = fields.Float(
         string='Precio en Marketplace',
         help='Último precio obtenido desde la plataforma del marketplace',
@@ -340,8 +344,8 @@ class ProductVariantMarketplace(models.Model):
                         pen_currency = self.env['res.currency'].search([('name', '=', 'PEN')], limit=1)
                         
                         for record in falabella_links:
-                            # El SellerSku es la referencia interna de la variante
-                            variant_sku = record.product_id.default_code
+                            # El SellerSku es la referencia interna de la variante o el SKU del marketplace si fue provisto
+                            variant_sku = record.marketplace_sku or record.product_id.default_code
                             if variant_sku and variant_sku in price_map:
                                 record.marketplace_price = price_map[variant_sku]['price']
                                 record.marketplace_stock = price_map[variant_sku]['stock']
@@ -408,7 +412,7 @@ class ProductVariantMarketplace(models.Model):
                             
                     pen_currency = self.env['res.currency'].search([('name', '=', 'PEN')], limit=1)
                     for record in ripley_links:
-                        variant_sku = record.product_id.default_code
+                        variant_sku = record.marketplace_sku or record.product_id.default_code
                         if variant_sku and variant_sku in price_map:
                             record.marketplace_price = price_map[variant_sku]['price']
                             record.marketplace_stock = price_map[variant_sku]['stock']
