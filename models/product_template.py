@@ -424,6 +424,63 @@ class ProductVariantMarketplace(models.Model):
                     _logger = logging.getLogger(__name__)
                     _logger.error("Error sincronizando Ripley: %s", str(e))
 
+        # Sincronización de Claro (VTEX)
+        vtex_account_name = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_account_name')
+        vtex_app_key = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_app_key')
+        vtex_app_token = self.env['ir.config_parameter'].sudo().get_param('url_marketplace.vtex_app_token')
+
+        if vtex_account_name and vtex_app_key and vtex_app_token:
+            vtex_records = self.search([('url', '!=', False)])
+            # Asumimos que la URL de Claro contiene 'claro'
+            vtex_links = [r for r in vtex_records if 'claro' in r.url.lower() or 'vtex' in r.url.lower()]
+            
+            if vtex_links:
+                headers = {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-VTEX-API-AppKey': vtex_app_key,
+                    'X-VTEX-API-AppToken': vtex_app_token
+                }
+                
+                pen_currency = self.env['res.currency'].search([('name', '=', 'PEN')], limit=1)
+                
+                for record in vtex_links:
+                    variant_sku = record.marketplace_sku or record.product_id.default_code
+                    if not variant_sku:
+                        continue
+                        
+                    try:
+                        # 1. Obtener precio (API de VTEX v2)
+                        price_url = f"https://api.vtex.com/{vtex_account_name}/pricing/prices/{variant_sku}"
+                        price_res = requests.get(price_url, headers=headers, timeout=10)
+                        
+                        vtex_price = None
+                        if price_res.status_code == 200:
+                            price_data = price_res.json()
+                            # VTEX devuelve basePrice o costPrice
+                            vtex_price = price_data.get('basePrice', price_data.get('costPrice', 0.0))
+                        
+                        # 2. Obtener inventario (API de Logistics)
+                        stock_url = f"https://{vtex_account_name}.vtexcommercestable.com.br/api/logistics/pvt/inventory/skus/{variant_sku}"
+                        stock_res = requests.get(stock_url, headers=headers, timeout=10)
+                        
+                        vtex_stock = 0
+                        if stock_res.status_code == 200:
+                            stock_data = stock_res.json()
+                            balance = stock_data.get('balance', [])
+                            for b in balance:
+                                vtex_stock += b.get('totalQuantity', 0)
+                                
+                        if vtex_price is not None:
+                            record.marketplace_price = float(vtex_price)
+                            record.marketplace_stock = int(vtex_stock)
+                            record.last_price_sync = datetime.now()
+                            if pen_currency:
+                                record.marketplace_currency_id = pen_currency.id
+                                
+                    except Exception as e:
+                        _logger.error("Error sincronizando VTEX para SKU %s: %s", variant_sku, str(e))
+
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'

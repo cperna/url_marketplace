@@ -63,6 +63,25 @@
                             </div>
                         </setting>
                     </block>
+                    
+                    <block title="VTEX API (Claro Perú)" name="vtex_api_setting_container">
+                        <setting id="vtex_api_setting" string="VTEX API Credentials" help="Credenciales de AppKey y AppToken generadas en VTEX">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="vtex_account_name" class="col-lg-3 o_light_label"/>
+                                    <field name="vtex_account_name" class="oe_inline" placeholder="ej. claroperu"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="vtex_app_key" class="col-lg-3 o_light_label"/>
+                                    <field name="vtex_app_key" class="oe_inline"/>
+                                </div>
+                                <div class="row mt8">
+                                    <label for="vtex_app_token" class="col-lg-3 o_light_label"/>
+                                    <field name="vtex_app_token" class="oe_inline" password="True"/>
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

@@ -50,3 +50,21 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='url_marketplace.ml_auth_code',
         help="Código de autorización manual (TG-...) generado tras dar permisos a la App."
     )
+
+    vtex_account_name = fields.Char(
+        string='VTEX Account Name (Claro)',
+        config_parameter='url_marketplace.vtex_account_name',
+        help="El nombre de tu cuenta en VTEX (ej. claroperu o tiendaclaro)"
+    )
+
+    vtex_app_key = fields.Char(
+        string='VTEX API AppKey',
+        config_parameter='url_marketplace.vtex_app_key',
+        help="La Clave API generada en VTEX"
+    )
+
+    vtex_app_token = fields.Char(
+        string='VTEX API AppToken',
+        config_parameter='url_marketplace.vtex_app_token',
+        help="El Token Secreto de la API generado en VTEX"
+    )
