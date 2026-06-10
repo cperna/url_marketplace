@@ -97,6 +97,10 @@ class ProductVariantMarketplace(models.Model):
         string='SKU en Marketplace',
         help='SKU usado en este marketplace si es distinto a la Referencia Interna de Odoo'
     )
+    marketplace_product_name = fields.Char(
+        string='Nombre en Marketplace',
+        help='Nombre del producto tal cual aparece en el catálogo del marketplace'
+    )
     marketplace_price = fields.Float(
         string='Precio en Marketplace',
         help='Último precio obtenido desde la plataforma del marketplace',

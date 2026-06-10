@@ -69,10 +69,38 @@
         </field>
     </record>
 
+    <!-- Acción de Ventana para Enlaces Huérfanos -->
+    <record id="action_marketplace_orphan_links" model="ir.actions.act_window">
+        <field name="name">Enlaces Huérfanos</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">product.variant.marketplace</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('product_id', '=', False)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay enlaces huérfanos
+            </p>
+            <p>
+                Los productos importados desde los marketplaces que no encontraron coincidencia con Odoo aparecerán aquí.
+            </p>
+        </field>
+    </record>
+
     <!-- Menú en Configuración de Sitio Web -->
     <menuitem id="menu_marketplace_marketplace_website"
               name="Marketplaces"
-              action="action_marketplace_marketplace"
               parent="website.menu_website_global_configuration"
               sequence="50"/>
+              
+    <menuitem id="menu_marketplace_marketplace_list"
+              name="Marketplaces"
+              action="action_marketplace_marketplace"
+              parent="menu_marketplace_marketplace_website"
+              sequence="10"/>
+
+    <menuitem id="menu_marketplace_orphan_links"
+              name="Enlaces Huérfanos"
+              action="action_marketplace_orphan_links"
+              parent="menu_marketplace_marketplace_website"
+              sequence="20"/>
 </odoo>
