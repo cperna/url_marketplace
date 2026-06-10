@@ -369,14 +369,18 @@ class ProductVariantMarketplace(models.Model):
                         'Accept': 'application/json'
                     }
                     if ripley_shop_id:
-                        headers['Shop-Id'] = ripley_shop_id
+                        # Se ha eliminado del header a petición de soporte de Ripley
+                        pass
                         
                     price_map = {}
                     offset = 0
                     max_records = 100
                     
                     while True:
-                        url = f"https://ripley-prod.mirakl.net/api/offers?max={max_records}&offset={offset}"
+                        url = f"https://ripleyperu-prod.mirakl.net/api/offers?max={max_records}&offset={offset}"
+                        if ripley_shop_id:
+                            url += f"&shop_id={ripley_shop_id}"
+                            
                         res = requests.get(url, headers=headers, timeout=20)
                         if res.status_code == 200:
                             data = res.json()
