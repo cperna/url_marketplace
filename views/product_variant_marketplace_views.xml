@@ -109,6 +109,7 @@
                 <field name="product_id" placeholder="Asigna un producto..."/>
                 <field name="marketplace_price" readonly="1"/>
                 <field name="marketplace_stock" readonly="1"/>
+                <field name="url" widget="url" optional="show" string="URL"/>
             </tree>
         </field>
     </record>

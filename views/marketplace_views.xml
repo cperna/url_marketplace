@@ -86,6 +86,43 @@
         </field>
     </record>
 
+    <!-- Vista de Búsqueda para Enlaces -->
+    <record id="view_product_variant_marketplace_search" model="ir.ui.view">
+        <field name="name">product.variant.marketplace.search</field>
+        <field name="model">product.variant.marketplace</field>
+        <field name="arch" type="xml">
+            <search string="Buscar Enlaces">
+                <field name="marketplace_product_name" string="Nombre"/>
+                <field name="marketplace_sku" string="SKU Marketplace"/>
+                <field name="product_id" string="Producto Odoo"/>
+                <field name="url" string="URL"/>
+                <filter string="Huérfanos" name="orphans" domain="[('product_id', '=', False)]"/>
+                <filter string="Enlazados" name="linked" domain="[('product_id', '!=', False)]"/>
+                <group expand="0" string="Agrupar Por">
+                    <filter string="Marketplace" name="group_by_marketplace" context="{'group_by':'marketplace_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Acción de Ventana para Todos los Enlaces -->
+    <record id="action_marketplace_all_links" model="ir.actions.act_window">
+        <field name="name">Todos los Enlaces</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">product.variant.marketplace</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="view_product_variant_marketplace_search"/>
+        <field name="context">{'search_default_group_by_marketplace': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No hay enlaces creados
+            </p>
+            <p>
+                Aquí verás todos los enlaces de tus productos hacia los distintos Marketplaces.
+            </p>
+        </field>
+    </record>
+
     <!-- Menú en Configuración de Sitio Web -->
     <menuitem id="menu_marketplace_marketplace_website"
               name="Marketplaces"
@@ -97,6 +134,12 @@
               action="action_marketplace_marketplace"
               parent="menu_marketplace_marketplace_website"
               sequence="10"/>
+
+    <menuitem id="menu_marketplace_all_links"
+              name="Todos los Enlaces"
+              action="action_marketplace_all_links"
+              parent="menu_marketplace_marketplace_website"
+              sequence="15"/>
 
     <menuitem id="menu_marketplace_orphan_links"
               name="Enlaces Huérfanos"
