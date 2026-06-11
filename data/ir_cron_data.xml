@@ -12,5 +12,16 @@
             <field name="doall" eval="False"/>
             <field name="active" eval="True"/>
         </record>
+        <record id="ir_cron_sync_falabella_urls" model="ir.cron">
+            <field name="name">Marketplace: Sincronizar URLs de Falabella</field>
+            <field name="model_id" ref="model_marketplace_falabella_sync"/>
+            <field name="state">code</field>
+            <field name="code">model.sync_falabella_urls()</field>
+            <field name="interval_number">12</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+            <field name="doall" eval="False"/>
+            <field name="active" eval="True"/>
+        </record>
     </data>
 </odoo>
