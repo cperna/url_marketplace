@@ -88,8 +88,19 @@ class FalabellaSync(models.AbstractModel):
             response = requests.get(url, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                body = data.get('SuccessResponse', {}).get('Body', {})
-                products = body.get('Products', {}).get('Product')
+                success_resp = data.get('SuccessResponse')
+                if not success_resp:
+                    return
+
+                body = success_resp.get('Body')
+                if not body:
+                    return
+                    
+                products_node = body.get('Products')
+                if not products_node or isinstance(products_node, str):
+                    return
+
+                products = products_node.get('Product')
                 
                 if products:
                     # Products could be a list or a dict
