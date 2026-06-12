@@ -313,6 +313,7 @@ class ProductVariantMarketplace(models.Model):
                         price_map = {}
                         for p in products_data:
                             sku = p.get('SellerSku')
+                            shop_sku = p.get('ShopSku')
                             # The price is usually in BusinessUnits.BusinessUnit
                             business_units = p.get('BusinessUnits', {}).get('BusinessUnit', [])
                             if isinstance(business_units, dict):
@@ -336,11 +337,17 @@ class ProductVariantMarketplace(models.Model):
                                 
                             try:
                                 final_price = sale_price if sale_price > 0 else price
-                                if final_price > 0 and sku:
-                                    price_map[sku] = {
-                                        'price': final_price,
-                                        'stock': stock
-                                    }
+                                if final_price > 0:
+                                    if sku:
+                                        price_map[sku] = {
+                                            'price': final_price,
+                                            'stock': stock
+                                        }
+                                    if shop_sku:
+                                        price_map[shop_sku] = {
+                                            'price': final_price,
+                                            'stock': stock
+                                        }
                             except (ValueError, TypeError):
                                 pass
                         
