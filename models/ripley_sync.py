@@ -81,8 +81,9 @@ class MarketplaceRipleySync(models.TransientModel):
                     sku_lower = re.sub(r'-\d+$', '', sku_lower)
                     
                     # Ripley Perú format: https://simple.ripley.com.pe/slug-skup
-                    # Si el SKU ya termina en 'p', no se la añadimos de nuevo por si acaso, aunque normalmente el 'p' es estático al final de la URL
-                    if sku_lower.endswith('p'):
+                    # Para productos de Marketplace (PMP...), NO se añade 'p' al final.
+                    # Si el SKU ya termina en 'p', tampoco se añade de nuevo.
+                    if sku_lower.startswith('pmp') or sku_lower.endswith('p'):
                         constructed_url = f"https://simple.ripley.com.pe/{slug}-{sku_lower}"
                     else:
                         constructed_url = f"https://simple.ripley.com.pe/{slug}-{sku_lower}p"
