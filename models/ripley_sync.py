@@ -77,6 +77,9 @@ class MarketplaceRipleySync(models.TransientModel):
                     slug = self._slugify(product_title)
                     sku_lower = product_sku.lower()
                     
+                    # Quitar sufijo de variante (ej. -1, -2) si está presente al final
+                    sku_lower = re.sub(r'-\d+$', '', sku_lower)
+                    
                     # Ripley Perú format: https://simple.ripley.com.pe/slug-skup
                     # Si el SKU ya termina en 'p', no se la añadimos de nuevo por si acaso, aunque normalmente el 'p' es estático al final de la URL
                     if sku_lower.endswith('p'):
