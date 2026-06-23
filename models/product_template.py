@@ -117,6 +117,11 @@ class ProductVariantMarketplace(models.Model):
         string='Moneda del Marketplace',
         readonly=True
     )
+    marketplace_status = fields.Char(
+        string='Estado en Marketplace',
+        help='Estado del producto en la plataforma (ej. active, paused, closed)',
+        readonly=True
+    )
     last_price_sync = fields.Datetime(
         string='Última Sincronización',
         readonly=True
@@ -269,10 +274,12 @@ class ProductVariantMarketplace(models.Model):
                             data = response.json()
                             price = data.get('price')
                             ml_currency = data.get('currency_id')
+                            status = data.get('status')
                             
                             if price is not None:
                                 record.marketplace_price = float(price)
                                 record.marketplace_stock = int(data.get('available_quantity', 0))
+                                record.marketplace_status = status
                                 record.last_price_sync = datetime.now()
                                 
                                 # Buscar moneda
@@ -323,13 +330,21 @@ class ProductVariantMarketplace(models.Model):
                             sale_price = 0.0
                             
                             stock = 0
+                            status = None
                             
                             for bu in business_units:
                                 if bu.get('BusinessUnit') == 'Falabella':
                                     price = float(bu.get('Price') or 0.0)
                                     sale_price = float(bu.get('SpecialPrice') or 0.0)
                                     stock = int(bu.get('Stock') or 0)
+                                    # Obtener el status desde BusinessUnit si existe, sino intentar a nivel producto
+                                    status = bu.get('Status') or p.get('Status') or 'active'
                                     break
+                            
+                            # Si no se encontró BusinessUnit Falabella o status sigue vacío
+                            if not status:
+                                status = p.get('Status') or 'active'
+                            
                             
                             if not price and not sale_price:
                                 price = float(p.get('Price') or 0.0)
@@ -341,12 +356,14 @@ class ProductVariantMarketplace(models.Model):
                                     if sku:
                                         price_map[sku] = {
                                             'price': final_price,
-                                            'stock': stock
+                                            'stock': stock,
+                                            'status': status.lower() if status else 'active'
                                         }
                                     if shop_sku:
                                         price_map[shop_sku] = {
                                             'price': final_price,
-                                            'stock': stock
+                                            'stock': stock,
+                                            'status': status.lower() if status else 'active'
                                         }
                             except (ValueError, TypeError):
                                 pass
@@ -360,6 +377,7 @@ class ProductVariantMarketplace(models.Model):
                             if variant_sku and variant_sku in price_map:
                                 record.marketplace_price = price_map[variant_sku]['price']
                                 record.marketplace_stock = price_map[variant_sku]['stock']
+                                record.marketplace_status = price_map[variant_sku]['status']
                                 record.last_price_sync = datetime.now()
                                 if pen_currency:
                                     record.marketplace_currency_id = pen_currency.id
@@ -409,9 +427,12 @@ class ProductVariantMarketplace(models.Model):
                                 qty = offer.get('quantity')
                                 
                                 if sku and price is not None:
+                                    # Mirakl maneja un booleano 'active' o un 'state_code'
+                                    is_active = offer.get('active', True)
                                     price_map[sku] = {
                                         'price': float(price),
-                                        'stock': int(qty) if qty is not None else 0
+                                        'stock': int(qty) if qty is not None else 0,
+                                        'status': 'active' if is_active else 'paused'
                                     }
                             
                             if len(offers) < max_records:
@@ -427,6 +448,7 @@ class ProductVariantMarketplace(models.Model):
                         if variant_sku and variant_sku in price_map:
                             record.marketplace_price = price_map[variant_sku]['price']
                             record.marketplace_stock = price_map[variant_sku]['stock']
+                            record.marketplace_status = price_map[variant_sku]['status']
                             record.last_price_sync = datetime.now()
                             if pen_currency:
                                 record.marketplace_currency_id = pen_currency.id
@@ -485,6 +507,7 @@ class ProductVariantMarketplace(models.Model):
                         if vtex_price is not None:
                             record.marketplace_price = float(vtex_price)
                             record.marketplace_stock = int(vtex_stock)
+                            record.marketplace_status = 'active' # VTEX asume activo si retorna 200
                             record.last_price_sync = datetime.now()
                             if pen_currency:
                                 record.marketplace_currency_id = pen_currency.id

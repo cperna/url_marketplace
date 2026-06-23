@@ -125,10 +125,12 @@ class MarketplaceMercadoLibreSync(models.TransientModel):
 
         # 3. Consultar detalles de los ítems en bloques de 20 (límite de la API de ML)
         chunk_size = 20
+        best_items_by_sku = {}
+
         for i in range(0, len(all_item_ids), chunk_size):
             chunk = all_item_ids[i:i + chunk_size]
             ids_str = ",".join(chunk)
-            items_url = f"https://api.mercadolibre.com/items?ids={ids_str}&attributes=id,title,permalink,seller_custom_field,attributes"
+            items_url = f"https://api.mercadolibre.com/items?ids={ids_str}&attributes=id,title,permalink,seller_custom_field,attributes,status,catalog_listing"
             items_res = requests.get(items_url, headers=ml_headers, timeout=20)
             
             if items_res.status_code == 200:
@@ -139,6 +141,8 @@ class MarketplaceMercadoLibreSync(models.TransientModel):
                         item_id = body.get('id')
                         title = body.get('title')
                         permalink = body.get('permalink')
+                        status = body.get('status')
+                        catalog_listing = body.get('catalog_listing', False)
                         
                         # Buscar SKU (primero en seller_custom_field, sino en atributos SELLER_SKU)
                         sku = body.get('seller_custom_field')
@@ -152,31 +156,56 @@ class MarketplaceMercadoLibreSync(models.TransientModel):
                         if not sku:
                             continue  # No podemos enlazar si no hay SKU
                             
-                        # Buscar producto en Odoo
-                        product = ProductModel.search([('default_code', '=', sku)], limit=1)
-                        if not product:
-                            continue  # Si no existe en Odoo, lo saltamos
-                            
-                        # Revisar si ya existe el enlace
-                        existing = LinkModel.search([
-                            ('product_id', '=', product.id),
-                            ('marketplace_id', '=', marketplace.id)
-                        ], limit=1)
+                        # Prioridad: 
+                        # 1. Active > Inactive
+                        # 2. Non-catalog > Catalog
+                        score = (1 if status == 'active' else 0, 1 if not catalog_listing else 0)
                         
-                        if existing:
-                            if existing.url != permalink or existing.marketplace_sku != sku or existing.marketplace_product_name != title:
-                                existing.write({
-                                    'url': permalink,
-                                    'marketplace_sku': sku,
-                                    'marketplace_product_name': title
-                                })
+                        existing_best = best_items_by_sku.get(sku)
+                        if existing_best:
+                            existing_score = (1 if existing_best['status'] == 'active' else 0, 1 if not existing_best['catalog_listing'] else 0)
+                            if score > existing_score:
+                                best_items_by_sku[sku] = {
+                                    'title': title,
+                                    'permalink': permalink,
+                                    'status': status,
+                                    'catalog_listing': catalog_listing
+                                }
                         else:
-                            LinkModel.create({
-                                'product_id': product.id,
-                                'marketplace_id': marketplace.id,
-                                'url': permalink,
-                                'marketplace_sku': sku,
-                                'marketplace_product_name': title
-                            })
+                            best_items_by_sku[sku] = {
+                                'title': title,
+                                'permalink': permalink,
+                                'status': status,
+                                'catalog_listing': catalog_listing
+                            }
             else:
                 _logger.error("Error consultando multiget en ML: %s", items_res.text)
+
+        # 4. Escribir a Odoo usando el mejor item por SKU
+        for sku, data in best_items_by_sku.items():
+            product = ProductModel.search([('default_code', '=', sku)], limit=1)
+            if not product:
+                continue  # Si no existe en Odoo, lo saltamos
+                
+            existing = LinkModel.search([
+                ('product_id', '=', product.id),
+                ('marketplace_id', '=', marketplace.id)
+            ], limit=1)
+            
+            if existing:
+                if existing.url != data['permalink'] or existing.marketplace_sku != sku or existing.marketplace_product_name != data['title'] or existing.marketplace_status != data['status']:
+                    existing.write({
+                        'url': data['permalink'],
+                        'marketplace_sku': sku,
+                        'marketplace_product_name': data['title'],
+                        'marketplace_status': data['status']
+                    })
+            else:
+                LinkModel.create({
+                    'product_id': product.id,
+                    'marketplace_id': marketplace.id,
+                    'url': data['permalink'],
+                    'marketplace_sku': sku,
+                    'marketplace_product_name': data['title'],
+                    'marketplace_status': data['status']
+                })

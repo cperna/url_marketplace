@@ -19,6 +19,9 @@
                                     <label for="falabella_api_key" class="col-lg-3 o_light_label"/>
                                     <field name="falabella_api_key" class="oe_inline" password="True"/>
                                 </div>
+                                <div class="mt16">
+                                    <button name="action_import_falabella_catalog" type="object" string="Importar Catálogo de Falabella" class="btn-primary" icon="fa-cloud-download"/>
+                                </div>
                             </div>
                         </setting>
                     </block>
@@ -33,6 +36,9 @@
                                 <div class="row">
                                     <label for="ripley_shop_id" class="col-lg-3 o_light_label"/>
                                     <field name="ripley_shop_id" class="oe_inline"/>
+                                </div>
+                                <div class="mt16">
+                                    <button name="action_import_ripley_catalog" type="object" string="Importar Catálogo de Ripley" class="btn-primary" icon="fa-cloud-download"/>
                                 </div>
                             </div>
                         </setting>
@@ -59,6 +65,9 @@
                                 </div>
                                 <div class="text-muted mt16">
                                     <p>Guarde la configuración y la próxima vez que se ejecute la sincronización de precios Odoo convertirá el código TG en un Token de acceso permanente.</p>
+                                </div>
+                                <div class="mt16">
+                                    <button name="action_import_ml_catalog" type="object" string="Importar Catálogo de Mercado Libre" class="btn-primary" icon="fa-cloud-download"/>
                                 </div>
                             </div>
                         </setting>

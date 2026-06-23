@@ -42,10 +42,10 @@ class FalabellaSync(models.AbstractModel):
             if not product.default_code:
                 continue
             
-            # Check if it already has a Falabella link with a URL
+            # Check if it already has a Falabella link with all necessary data
             has_valid_link = False
             for link in product.x_marketplace_ids:
-                if link.marketplace_id.id == falabella.id and link.url:
+                if link.marketplace_id.id == falabella.id and link.url and link.marketplace_sku and link.marketplace_product_name:
                     has_valid_link = True
                     break
             
@@ -110,21 +110,27 @@ class FalabellaSync(models.AbstractModel):
                     for prod in products:
                         if prod.get('SellerSku') == sku:
                             product_url = prod.get('Url')
+                            product_name = prod.get('Name')
+                            product_shop_sku = prod.get('ShopSku') or sku
                             if product_url:
-                                self._update_product_link(product, falabella, product_url)
-                                _logger.info(f"Updated Falabella URL for SKU {sku}")
+                                self._update_product_link(product, falabella, product_url, name=product_name, marketplace_sku=product_shop_sku)
+                                _logger.info(f"Updated Falabella URL and Data for SKU {sku}")
                             break
         except Exception as e:
             _logger.error(f"Error connecting to Falabella API for SKU {sku}: {e}")
 
-    def _update_product_link(self, product, falabella, url):
+    def _update_product_link(self, product, falabella, url, name=None, marketplace_sku=None):
         link = product.x_marketplace_ids.filtered(lambda l: l.marketplace_id.id == falabella.id)
+        vals = {'url': url}
+        if name:
+            vals['marketplace_product_name'] = name
+        if marketplace_sku:
+            vals['marketplace_sku'] = marketplace_sku
+
         if link:
-            link[0].url = url
+            link[0].write(vals)
         else:
-            self.env['product.variant.marketplace'].create({
-                'product_id': product.id,
-                'marketplace_id': falabella.id,
-                'url': url
-            })
+            vals['product_id'] = product.id
+            vals['marketplace_id'] = falabella.id
+            self.env['product.variant.marketplace'].create(vals)
 

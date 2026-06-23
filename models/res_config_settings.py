@@ -192,3 +192,42 @@ class ResConfigSettings(models.TransientModel):
                 'sticky': False,
             }
         }
+
+    def action_import_falabella_catalog(self):
+        self.env['marketplace.falabella.sync'].sync_falabella_urls()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Sincronización Iniciada',
+                'message': 'La sincronización de URLs de Falabella se ha iniciado.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+    def action_import_ml_catalog(self):
+        self.env['marketplace.mercadolibre.sync'].action_sync_urls()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Sincronización Iniciada',
+                'message': 'La sincronización de URLs de Mercado Libre se ha iniciado.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+
+    def action_import_ripley_catalog(self):
+        self.env['marketplace.ripley.sync'].action_sync_urls()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Sincronización Iniciada',
+                'message': 'La sincronización de URLs de Ripley se ha iniciado.',
+                'type': 'success',
+                'sticky': False,
+            }
+        }
